@@ -1,0 +1,14 @@
+---
+
+- name: Copy localvol config
+  template:
+    src: localvol.yml.j2
+    dest: "{{ localvol_config_dir }}/localvol.yml"
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Apply localvol resources
+  command: "kubectl apply -f {{ localvol_config_dir }}/localvol.yml"
+
+...

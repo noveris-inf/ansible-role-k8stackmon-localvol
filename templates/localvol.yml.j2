@@ -1,0 +1,89 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ localvol_local_storageclass }}
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+{% if localvol_registry_node|default('') != '' %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: registry-pv
+  labels:
+    app: registry-app
+spec:
+  capacity:
+    storage: {{ localvol_registry_size }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ localvol_local_storageclass }}
+  local:
+    path: {{ localvol_registry_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ localvol_registry_node }}
+{% endif %}
+{% if localvol_elastic_nodes is defined %}
+{% for item in localvol_elastic_nodes %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: elastic-{{ item }}-pv
+  labels:
+    app: elastic-app
+spec:
+  capacity:
+    storage: {{ localvol_elastic_size }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ localvol_local_storageclass }}
+  local:
+    path: {{ localvol_elastic_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ item }}
+{% endfor %}
+{% endif %}
+{% if localvol_logstash_nodes is defined %}
+{% for item in localvol_logstash_nodes %}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: logstash-{{ item }}-pv
+  labels:
+    app: logstash-app
+spec:
+  capacity:
+    storage: {{ localvol_logstash_size }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ localvol_local_storageclass }}
+  local:
+    path: {{ localvol_logstash_path }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ item }}
+{% endfor %}
+{% endif %}
